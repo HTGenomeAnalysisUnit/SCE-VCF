@@ -2,16 +2,18 @@
 
 SCE-VCF is a simple tool to evalute sample contamination from sequencing experiments. It uses WGS/WES VCF files to compute few metrics useful to detect potential sample contamination:
 
-- CHARR
+- CHARR: ref read fraction in hom alt vars as proposed by Wenham Lu, Broad Institute
 - Mean ref allele AB observed in hom alt genotypes
 - heterozygosity rate (Nhet / Nhom)
-- rate on inconsiste het calls (het call with AB outside threshold)
+- rate on inconsistent het calls (het call with AB outside threshold)
+
+The tool is better suited for cohort analysis so one can compare value distributions to identify outliers. Even a small cohort of 20 samples work fine in our test.
 
 ## Usage
 
 ```bash
 Usage:
-  CSQ Selector [options] [vcf ...]
+  sceVCF [options] [vcf ...]
 
 Arguments:
   [vcf ...]        input VCF/BCF file(s). Glob pattern allowed
@@ -31,8 +33,10 @@ Options:
 
 ## Notes
 
-The tool needs an annotated AF field in the input VCF to compute CHARR values. Ideally, this should be AF computed from the samples in the VCF, so the tool is better suited for cohort analysis. Even a small cohort of 20 samples work fine in our test.
+- **AF data:** The tool needs an annotated AF field in the input VCF to compute CHARR values. Ideally, this should be AF computed from the samples in the VCF, so the tool is better suited for cohort analysis. Even a small cohort of 20 samples work fine in our test.
 
-The tool can read multiple VCFs and statistics are then aggregated by sample IDs if there are matching sample IDs across the input VCFs. In this way it's easy to analyze cohort VCFs splitted by chromosome for example.
+- **Multiple input VCFs:** The tool can read multiple VCFs and statistics are then aggregated by sample IDs if there are matching sample IDs across the input VCFs. In this way it's easy to analyze cohort VCFs splitted by chromosome for example.
 
-User can specify a subset of samples to analyze in the cohort VCF, this can be conveniently used also to parallelize the analysis for large cohorts.
+- **Subset samples:** User can specify a subset of samples to analyze in the cohort VCF, this can be conveniently used also to parallelize the analysis for large cohorts. Note that some time is required anyway to parse sample initially, so run time will increase as more samples are present in the input VCF
+
+- **Subset regions** Analysis can be limited to specific chromosome(s) or region(s) by using `--region` option. If you are analyzing VCF from WGS of a mid/large cohort a realiable estimation can be obtained also analyzing single autosome.

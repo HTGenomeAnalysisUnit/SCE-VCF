@@ -2,7 +2,7 @@ import argparse
 import strformat
 from ./utils import log
 
-var p = newParser("CSQ Selector"):
+var p = newParser("sceVCF"):
     help("Select gene consequences from snpEff, VEP or bcftools annotations in VCF file")
     arg("vcf", nargs = -1, help="input VCF/BCF file(s). Glob pattern allowed")
     option("-o", "--out", help="Output file (TSV). If not provided output to stdout")

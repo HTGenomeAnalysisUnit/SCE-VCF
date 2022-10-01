@@ -9,19 +9,17 @@ import tables
 import math
 #import sets
 from os import fileExists
-import charr_compute/arg_parse
-import charr_compute/utils
+import scevcf/arg_parse
+import scevcf/utils
 
 const VERSION = "0.1.1"
-const TSV_HEADER = "#SAMPLE\tCHARR\tVALID_HOM_FOR_CHARR\tMEAN_REF_AB_HOM_ALT\tN_HETS\tHET_RATE\tINCONSISTENT_HET_RATE"
+const TSV_HEADER = "#SAMPLE\tHQ_HOM\tHQ_HOM_RATE\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHET_RATE\tINCONSISTENT_AB_HET_RATE"
 
 type Contamination_data = object
-  charrs: float
-  abnormal_charrs: int
+  charr: float
   ref_ab: float
-  n_het: int
-  n_hom: int
-  abnormal_hets: int
+  het: tuple[n: int, hq: int, bad: int]
+  hom: tuple[n: int, hq: int]
 
 iterator readvar(v: VCF, regions: seq[string]): Variant =
   if regions.len == 0:
@@ -30,43 +28,34 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
     for r in regions:
       for variant in v.query(r): yield variant
 
-proc update_values(sdata: var Table[string, Contamination_data], v: Variant, ad: string, af: string, samples: seq[string], het_ab_limit: (float,float), minGQ: int, minDP: int) =
-  var
-    ads: seq[int32]
-    gts: seq[int32]
-    afs: seq[float32]
-    gqs: seq[int32]
-    dps: seq[int32]
-
-  doAssert v.format.get(ad, ads) == Status.OK
-  doAssert v.format.get("GQ", gqs) == Status.OK
-  doAssert v.format.get("DP", dps) == Status.OK
-  doAssert v.info.get(af, afs) == Status.OK
-  let genos = v.format.genotypes(gts)
-   
+proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, minDP: int) =
   for i in 0..samples.high:
     if dps[i] < minDP: continue
-    let sample_ads = @[ads[i*2],ads[i*2+1]]
+    let 
+      ref_ad = ads[i*2]
+      alt_ad = ads[i*2+1]
+      tot_ad = ref_ad + alt_ad
     var x = sdata.getOrDefault(samples[i])
 
     case genos[i].alts:
       of 2: #compute charr for hom alt vars
+        x.hom.n += 1
         if gqs[i] < minGQ: continue
-        let ref_af = 1 - (if afs[0] < 0: 0.0 else: afs[0])
-        let ref_ab = sample_ads[0] / sum(sample_ads)
-        let charr = ref_ab.float * (1/ref_af)
+        let 
+          ref_af = 1 - (if afs[0] < 0: 0.0 else: afs[0])
+          ref_ab = ref_ad / tot_ad
+          charr = ref_ab * (1/ref_af)
         #echo fmt"{$v} - {$genos[i].alts} - ADS: {sample_ads} - AF: {afs[0]} - REF_AF: {ref_af} - CHARR: {charr}"
-        if charr.classify == fcNan or charr.classify == fcInf:
-          x.abnormal_charrs += 1
-        else:
-          x.charrs += charr
-        x.n_hom += 1
+        if charr.classify != fcNan and charr.classify != fcInf:
+          x.charr += charr
+        x.hom.hq += 1
         x.ref_ab += ref_ab
       of 1: #check 
-        x.n_het += 1
-        let het_ab = sample_ads[1] / sum(sample_ads)
+        x.het.n += 1
+        if gqs[i] >= minGQ: x.het.hq += 1
+        let het_ab = alt_ad / tot_ad
         if het_ab < het_ab_limit[0] or het_ab > het_ab_limit[1]:
-          x.abnormal_hets += 1
+          x.het.bad += 1
       else:
         discard
 
@@ -119,9 +108,17 @@ proc main* () =
     start_time = cpuTime()
     t0 = cpuTime()
     n_multiallele = 0
+    n_large_af = 0
     interval = 50000
     n = 0
     sample_data: Table[string, Contamination_data]
+
+  var
+    ads: seq[int32]
+    gts: seq[int32]
+    afs: seq[float32]
+    gqs: seq[int32]
+    dps: seq[int32]
 
   for f in opts.vcf:
     log("INFO", fmt"Processing file {f}")
@@ -139,14 +136,6 @@ proc main* () =
     except:
       log("FATAL", fmt"Didn't find {opts.ad_field} FORMAT in header in {vcf.fname}")
 
-    var empty_val: Contamination_data
-    empty_val.n_het = 0
-    empty_val.n_hom = 0
-    empty_val.charrs = 0
-    empty_val.abnormal_hets = 0
-    for s in vcf.samples:
-      discard sample_data.hasKeyOrPut(s, empty_val)
-
     for v in vcf.readvar(regions):
       n = n + 1
       var (dolog, log_msg) = progress_counter(n, interval, t0)
@@ -157,24 +146,35 @@ proc main* () =
       if len(v.ALT) > 1: #consider only biallelic sites
         n_multiallele += 1
         continue
+      
+      doAssert v.format.get(opts.ad_field, ads) == Status.OK
+      doAssert v.format.get("GQ", gqs) == Status.OK
+      doAssert v.format.get("DP", dps) == Status.OK
+      doAssert v.info.get(opts.af_field, afs) == Status.OK
+      let genos = v.format.genotypes(gts)
 
-      sample_data.update_values(v, opts.ad_field, opts.af_field, vcf.samples, het_ab_limit, minGQ, minDP)
-    log("INFO", fmt"{n} variants processed, {n_multiallele} multiallelic vars ignored")
+      if afs[0] > 0.95: 
+        n_large_af += 1
+        continue #skip vars where ref is too rare
+      
+      sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, minDP)
+    
+    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af} vars ignored: {n_multiallele} multiallelic, {n_large_af} AF > 0.95")
     close(vcf)
   
-
   log("INFO", "Computing contamination values")
   var written_samples = 0
   for sample_id, values in sample_data.pairs:
     written_samples += 1
     let
-      valid_charrs =  values.n_hom - values.abnormal_charrs
-      charr_value = values.charrs / valid_charrs.float
-      het_rate = values.n_het / values.n_hom
-      bad_het_rate = values.abnormal_hets / values.n_het
-      mean_ref_ab = values.ref_ab / values.n_hom.float
+      charr_value = (values.charr / values.hom.hq.float).formatFloat(ffDecimal, 4)
+      het_rate = (values.het.hq / values.hom.hq).formatFloat(ffDecimal, 4)
+      bad_het_rate = (values.het.bad / values.het.n).formatFloat(ffDecimal, 4)
+      mean_ref_ab = (values.ref_ab / values.hom.hq.float).formatFloat(ffDecimal, 4)
+      hom_hq_rate = (values.hom.hq / values.hom.n).formatFloat(ffDecimal, 4)
+      het_hq_rate = (values.het.hq / values.het.n).formatFloat(ffDecimal, 4)
 
-    let result_line = &"{sample_id}\t{charr_value}\t{valid_charrs}\t{mean_ref_ab}\t{values.n_het}\t{het_rate}\t{bad_het_rate}"
+    let result_line = &"{sample_id}\t{values.hom.hq}\t{hom_hq_rate}\t{values.het.hq}\t{het_hq_rate}\t{charr_value}\t{mean_ref_ab}\t{het_rate}\t{bad_het_rate}"
     if write_to_file:
       out_tsv.writeLine(result_line)
     else:

@@ -5,7 +5,7 @@ author        = "edoardo.giacopuzzi"
 description   = "Fast calculation of metric useful to estimate sample contamination"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["bin/SCE-VCF"]
+bin           = @["bin/sceVCF"]
 skipDirs      = @["test"]
 
 
