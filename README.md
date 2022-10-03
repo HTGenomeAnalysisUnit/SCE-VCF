@@ -4,7 +4,7 @@ SCE-VCF is a simple tool to evalute sample contamination from sequencing experim
 
 - CHARR: ref read fraction in hom alt vars as proposed by Wenham Lu, Broad Institute
 - Mean ref allele AB observed in hom alt genotypes
-- heterozygosity rate (Nhet / Nhom)
+- heterozygosity ratio (Nhet / Nhom)
 - rate on inconsistent het calls (het call with AB outside threshold)
 
 The tool is better suited for cohort analysis so one can compare value distributions to identify outliers. Even a small cohort of 20 samples work fine in our test.
@@ -30,6 +30,12 @@ Options:
   -s, --samples=SAMPLES      Restrict analysis to the given samples. Comma separated list or file wiht one sample per line
   -r, --region=REGION        Specify genomic region for processing. Format is chr[:start-end]. Comma-separated list of regions or file with 1 region per line.
 ```
+
+## How it works
+
+1. any variants with DP less than `min_DP` will be skipped.
+2. variants with GQ less than `min_GQ` will be used only to compute inconsistent het rate, but discarded when computed het ratio and CHARR
+3. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom sites with ALT AF < 0.95, to avoid issues with very low AFref
 
 ## Notes
 
