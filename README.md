@@ -39,7 +39,7 @@ Options:
 
 ## Notes
 
-- **AF data:** The tool needs an annotated AF field in the input VCF to compute CHARR values. Ideally, this should be AF computed from the samples in the VCF, so the tool is better suited for cohort analysis. Even a small cohort of 20 samples work fine in our test.
+- **AF data:** The tool needs an annotated AF field in the input VCF to compute CHARR values. Ideally, this should be AF computed from the samples in the VCF, so the tool is better suited for cohort analysis. Even a small cohort of 20 samples work fine in our test. In case your cohort is smaller than that, we suggest to annotate your file with AF from large external populations (like gnomAD) and then pass the relevant INFO field to `--af-field`
 
 - **Multiple input VCFs:** The tool can read multiple VCFs and statistics are then aggregated by sample IDs if there are matching sample IDs across the input VCFs. In this way it's easy to analyze cohort VCFs splitted by chromosome for example.
 
