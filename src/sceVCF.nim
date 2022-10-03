@@ -167,12 +167,12 @@ proc main* () =
   for sample_id, values in sample_data.pairs:
     written_samples += 1
     let
-      charr_value = (values.charr / values.hom.hq.float).formatFloat(ffDecimal, 4)
-      het_rate = (values.het.hq / values.hom.hq).formatFloat(ffDecimal, 4)
-      bad_het_rate = (values.het.bad / values.het.n).formatFloat(ffDecimal, 4)
-      mean_ref_ab = (values.ref_ab / values.hom.hq.float).formatFloat(ffDecimal, 4)
-      hom_hq_rate = (values.hom.hq / values.hom.n).formatFloat(ffDecimal, 4)
-      het_hq_rate = (values.het.hq / values.het.n).formatFloat(ffDecimal, 4)
+      charr_value = (values.charr / values.hom.hq.float).formatFloat(ffDecimal, 5)
+      het_rate = (values.het.hq / values.hom.hq).formatFloat(ffDecimal, 5)
+      bad_het_rate = (values.het.bad / values.het.n).formatFloat(ffDecimal, 5)
+      mean_ref_ab = (values.ref_ab / values.hom.hq.float).formatFloat(ffDecimal, 5)
+      hom_hq_rate = (values.hom.hq / values.hom.n).formatFloat(ffDecimal, 5)
+      het_hq_rate = (values.het.hq / values.het.n).formatFloat(ffDecimal, 5)
 
     let result_line = &"{sample_id}\t{values.hom.hq}\t{hom_hq_rate}\t{values.het.hq}\t{het_hq_rate}\t{charr_value}\t{mean_ref_ab}\t{het_rate}\t{bad_het_rate}"
     if write_to_file:
