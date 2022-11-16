@@ -34,8 +34,22 @@ Options:
 ## How it works
 
 1. any variants with DP less than `min_DP` will be skipped.
-2. variants with GQ less than `min_GQ` will be used only to compute inconsistent het rate, but discarded when computed het ratio and CHARR
-3. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom sites with ALT AF < 0.95, to avoid issues with very low AFref
+2. variants with GQ less than `min_GQ` will be used only to compute inconsistent het rate, but discarded when computed het rate and CHARR
+3. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom alt sites with ALT AF < 0.95, to avoid issues with very low AFref
+
+## Output columns
+
+| Column | Description |
+|--------|-------------|
+| SAMPLE | Sample ID as read from input VCF file |
+| HQ_HOM | Number of high quality homozygous sites used in CHARR computation |
+| HQ_HOM_RATE | Fraction of HQ hom sites across all hom sites with enough coverage |
+| HQ_HET | Number of high quality heterozygous sites used to compute het rate |
+| HQ_HET_RATE | Fraction of HQ het sites across all het sites with enough coverage |
+| CHARR | CHARR value computed as explained above using only HQ hom alt sites |
+| MEAN_REF_AB_HOM_ALT | Mean ref allele frequency observed in HQ hom alt sites |
+| HET_RATE | Heterozygoisty ratio (Nhet / Nhom) computed using only HQ genotypes |
+| INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threashold across all het sites with enough coverage (this includes all het sites with DP > threashold, disregarding GQ) |
 
 ## Notes
 
