@@ -33,9 +33,10 @@ Options:
 
 ## How it works
 
-1. any variants with DP less than `min_DP` will be skipped.
-2. variants with GQ less than `min_GQ` will be used only to compute inconsistent het rate, but discarded when computed het rate and CHARR
-3. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom alt sites with ALT AF < 0.95, to avoid issues with very low AFref
+1. Multi-allelic variants are skipped.
+2. Any genotype with DP less than `min_DP` is skipped.
+3. Genotypes with GQ less than `min_GQ` are used only to compute inconsistent het rate, but discarded when computed het rate and CHARR.
+4. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom alt genotypes in variants with ALT AF < 0.95, to avoid issues with very low AFref.
 
 ## Output columns
 

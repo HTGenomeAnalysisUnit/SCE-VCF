@@ -45,11 +45,12 @@ proc update_values(sdata: var Table[string, Contamination_data], genos: Genotype
           ref_af = 1 - (if afs[0] < 0: 0.0 else: afs[0])
           ref_ab = ref_ad / tot_ad
           charr = ref_ab * (1/ref_af)
-        #echo fmt"{$v} - {$genos[i].alts} - ADS: {sample_ads} - AF: {afs[0]} - REF_AF: {ref_af} - CHARR: {charr}"
         if charr.classify != fcNan and charr.classify != fcInf:
+          #echo fmt"{$genos[i].alts} - TOT_AD: {tot_ad} - REF_AD: {ref_ad} - REF_AB: {ref_ab} - REF_AF: {ref_af} - CHARR: {charr}"
           x.charr += charr
         x.hom.hq += 1
-        x.ref_ab += ref_ab
+        if ref_ab.classify != fcNan and ref_ab.classify != fcInf:
+          x.ref_ab += ref_ab
       of 1: #check 
         x.het.n += 1
         if gqs[i] >= minGQ: x.het.hq += 1
@@ -142,7 +143,8 @@ proc main* () =
       if dolog: log("INFO", log_msg)
 
       var chrom = $v.CHROM
-      if chrom.replace("chr","") in @["X","Y","M","MT"]: continue  
+      if chrom.replace("chr","") in @["X","Y","M","MT"]: continue
+      
       if len(v.ALT) > 1: #consider only biallelic sites
         n_multiallele += 1
         continue

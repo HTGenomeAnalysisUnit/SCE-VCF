@@ -1,2 +1,4 @@
 test/
 bin/
+paper/
+localcompile.sh
