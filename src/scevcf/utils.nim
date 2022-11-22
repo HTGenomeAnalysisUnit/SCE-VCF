@@ -22,6 +22,10 @@ proc elapsed_time* (start_time: float): string =
 proc progress_counter* (n:int, interval: var int, t0: var float): (bool, string) {.discardable.} =
     result = (false, "")
 
+    if floorMod(n, interval) == 0:
+        result = (true, fmt"{n} variants processed. Last batch: {interval} in {elapsed_time(t0)}")
+        t0 = cpuTime()
+
     case n
         #of 50000: interval = 25000
         of 150000: interval = 50000
@@ -29,10 +33,6 @@ proc progress_counter* (n:int, interval: var int, t0: var float): (bool, string)
         of 1000000: interval = 500000
         else: discard
     
-    if floorMod(n, interval) == 0:
-            result = (true, fmt"{n} variants processed. Last batch: {interval} in {elapsed_time(t0)}")
-            t0 = cpuTime()
-
 proc read_list* (list: string, name: string = ""): seq[string] =
     if list == "":
         result = @[]

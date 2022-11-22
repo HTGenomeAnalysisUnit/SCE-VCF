@@ -73,6 +73,8 @@ proc main* () =
     regions = read_list(opts.region, "region")
     minGQ = parseInt(opts.min_GQ)
     minDP = parseInt(opts.min_DP)
+    refAF_lims_opts = opts.refaf_limit.split(",")
+    refAF_lims = @[parseFloat(refAF_lims_opts[0]), parseFloat(refAF_lims_opts[1])]
   var samples = read_list(opts.samples, "samples")
   var het_ab_limit: (float, float) 
   try:
@@ -108,8 +110,6 @@ proc main* () =
   var
     start_time = cpuTime()
     t0 = cpuTime()
-    n_multiallele = 0
-    n_large_af = 0
     interval = 50000
     n = 0
     sample_data: Table[string, Contamination_data]
@@ -122,6 +122,11 @@ proc main* () =
     dps: seq[int32]
 
   for f in opts.vcf:
+    var
+      n_multiallele = 0
+      n_large_af = 0
+      n_no_aftag = 0
+    
     log("INFO", fmt"Processing file {f}")
     var vcf:VCF
     discard open(vcf, f, samples=samples)
@@ -145,23 +150,32 @@ proc main* () =
       var chrom = $v.CHROM
       if chrom.replace("chr","") in @["X","Y","M","MT"]: continue
       
-      if len(v.ALT) > 1: #consider only biallelic sites
+      #consider only biallelic sites
+      if len(v.ALT) > 1: 
         n_multiallele += 1
         continue
       
       doAssert v.format.get(opts.ad_field, ads) == Status.OK
       doAssert v.format.get("GQ", gqs) == Status.OK
-      doAssert v.format.get("DP", dps) == Status.OK
-      doAssert v.info.get(opts.af_field, afs) == Status.OK
+      doAssert v.format.get("DP", dps) == Status.OK 
       let genos = v.format.genotypes(gts)
 
-      if afs[0] > 0.95: 
+      #skip variant if the selected AF field is not found
+      if v.info.get(opts.af_field, afs) != Status.OK:
+        n_no_aftag += 1
+        continue
+
+      #skip var where ref AF is too low or high
+      #because this will results in outlier CHARR values
+      let refAF = 1-afs[0]
+      #echo fmt"{$v} - AF: {afs[0]} - refAF {refAF} - AF lims low: {refAF_lims[0]} - AF lims high: {refAF_lims[1]}"
+      if refAF < refAF_lims[0] or refAF > refAF_lims[1]: 
         n_large_af += 1
-        continue #skip vars where ref is too rare
+        continue 
       
       sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, minDP)
     
-    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af} vars ignored: {n_multiallele} multiallelic, {n_large_af} AF > 0.95")
+    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag} vars ignored: {n_multiallele} multiallelic, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
     close(vcf)
   
   log("INFO", "Computing contamination values")
