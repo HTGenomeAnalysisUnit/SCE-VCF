@@ -4,6 +4,7 @@ import hts
 import times
 import strformat
 import strutils
+import sequtils
 import streams
 import tables
 import math
@@ -14,6 +15,7 @@ import scevcf/utils
 
 const VERSION = "0.1.1"
 const TSV_HEADER = "#SAMPLE\tHQ_HOM\tHQ_HOM_RATE\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHET_RATE\tINCONSISTENT_AB_HET_RATE"
+const AUTOSOMES = map(to_seq(1..22), proc(x: int): string = $x) 
 
 type Contamination_data = object
   charr: float
@@ -113,6 +115,9 @@ proc main* () =
     interval = 50000
     n = 0
     sample_data: Table[string, Contamination_data]
+    n_multiallele = 0
+    n_large_af = 0
+    n_no_aftag = 0
 
   var
     ads: seq[int32]
@@ -122,10 +127,6 @@ proc main* () =
     dps: seq[int32]
 
   for f in opts.vcf:
-    var
-      n_multiallele = 0
-      n_large_af = 0
-      n_no_aftag = 0
     
     log("INFO", fmt"Processing file {f}")
     var vcf:VCF
@@ -148,7 +149,7 @@ proc main* () =
       if dolog: log("INFO", log_msg)
 
       var chrom = $v.CHROM
-      if chrom.replace("chr","") in @["X","Y","M","MT"]: continue
+      if chrom.replace("chr","") notin AUTOSOMES: continue
       
       #consider only biallelic sites
       if len(v.ALT) > 1: 
