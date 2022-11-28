@@ -11,7 +11,7 @@ var p = newParser("sceVCF"):
     option("-t", "--refaf_limit", help="Limits of REF AF. Comma-separated lower and upper limit", default = some("0.1,0.9"))
     option("-l", "--het_ab_limit", help="Comma separated min and max allele balance accepted for het calls", default = some("0.25,0.75"))
     option("-q", "--min_GQ", help="Min GQ for hom var to be included in charr computation", default = some("20"))
-    option("-d", "--min_DP", help="Min DP for var to be included in computation", default = some("20"))
+    option("-d", "--dp_limit", help="Limits of genotype DP. Comma-separated lower and upper limit", default = some("20,100"))
     option("-s", "--samples", help="Restrict analysis to the given samples. Comma separated list or file wiht one sample per line")
     option("-r", "--region", help="Specify genomic region for processing. Format is chr[:start-end]. Comma-separated list of regions or file with 1 region per line.")                
 
@@ -36,6 +36,6 @@ proc logArgs*(opts: ref) {.discardable.} =
     log("ARG", fmt"REF AF limits: {opts.refaf_limit}")
     log("ARG", fmt"Het AB limit: {opts.het_ab_limit}")
     log("ARG", fmt"Min GQ: {opts.min_GQ}")
-    log("ARG", fmt"Min DP: {opts.min_DP}")
+    log("ARG", fmt"DP limit: {opts.dp_limit}")
     if opts.samples != "":
         log("ARG", fmt"Samples {opts.samples}")

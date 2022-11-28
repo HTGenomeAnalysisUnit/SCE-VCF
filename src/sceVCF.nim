@@ -30,9 +30,9 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
     for r in regions:
       for variant in v.query(r): yield variant
 
-proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, minDP: int) =
+proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
   for i in 0..samples.high:
-    if dps[i] < minDP: continue
+    if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
     let 
       ref_ad = ads[i*2]
       alt_ad = ads[i*2+1]
@@ -74,7 +74,8 @@ proc main* () =
   let 
     regions = read_list(opts.region, "region")
     minGQ = parseInt(opts.min_GQ)
-    minDP = parseInt(opts.min_DP)
+    dp_lims_opts = opts.dp_limit.split(",")
+    dp_lims = @[parseInt(dp_lims_opts[0]), parseInt(dp_lims_opts[1])]
     refAF_lims_opts = opts.refaf_limit.split(",")
     refAF_lims = @[parseFloat(refAF_lims_opts[0]), parseFloat(refAF_lims_opts[1])]
   var samples = read_list(opts.samples, "samples")
@@ -174,7 +175,7 @@ proc main* () =
         n_large_af += 1
         continue 
       
-      sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, minDP)
+      sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
     log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag} vars ignored: {n_multiallele} multiallelic, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
     close(vcf)
