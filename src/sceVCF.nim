@@ -149,6 +149,8 @@ proc main* () =
       var (dolog, log_msg) = progress_counter(n, interval, t0)
       if dolog: log("INFO", log_msg)
 
+      #consider only PASS vars from autosomes
+      if v.FILTER != "PASS" and v.FILTER != ".": continue
       var chrom = $v.CHROM
       if chrom.replace("chr","") notin AUTOSOMES: continue
       
