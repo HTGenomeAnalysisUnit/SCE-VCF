@@ -117,6 +117,7 @@ proc main* () =
     n = 0
     sample_data: Table[string, Contamination_data]
     n_multiallele = 0
+    n_indels = 0
     n_large_af = 0
     n_no_aftag = 0
 
@@ -158,6 +159,11 @@ proc main* () =
       if len(v.ALT) > 1: 
         n_multiallele += 1
         continue
+
+      #skip indels
+      if v.REF.len > 1 or v.ALT[0].len > 1:
+        n_indels += 1
+        continue
       
       doAssert v.format.get(opts.ad_field, ads) == Status.OK
       doAssert v.format.get("GQ", gqs) == Status.OK
@@ -171,7 +177,12 @@ proc main* () =
 
       #skip var where ref AF is too low or high
       #because this will results in outlier CHARR values
-      let refAF = 1-afs[0]
+      var refAF: float
+      if (opts.is_refAF):
+        refAF = afs[0]
+      else:
+        refAF = 1-afs[0]
+        
       #echo fmt"{$v} - AF: {afs[0]} - refAF {refAF} - AF lims low: {refAF_lims[0]} - AF lims high: {refAF_lims[1]}"
       if refAF < refAF_lims[0] or refAF > refAF_lims[1]: 
         n_large_af += 1
@@ -179,7 +190,7 @@ proc main* () =
       
       sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
-    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag} vars ignored: {n_multiallele} multiallelic, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
+    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag + n_indels} vars ignored: {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
     close(vcf)
   
   log("INFO", "Computing contamination values")
