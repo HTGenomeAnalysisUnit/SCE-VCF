@@ -4,7 +4,7 @@ SCE-VCF is a simple tool to evalute sample contamination from sequencing experim
 
 - CHARR: ref read fraction in hom alt vars as proposed by Wenham Lu, Broad Institute
 - Mean ref allele AB observed in hom alt genotypes
-- heterozygosity ratio (Nhet / Nhom)
+- heterozygosity ratio (N HQ het / (N HQ het + N HQ hom))
 - rate on inconsistent het calls (het call with AB outside threshold)
 
 The ideal scenario is a cohort analysis so one can compare value distributions to identify outliers. Even a small cohort of 50 samples works fine in our test.
@@ -25,12 +25,13 @@ Options:
   -o, --out=OUT              Output file (TSV). If not provided output to stdout
   -f, --ad_field=AD_FIELD    FORMAT field containing the AD values (default: AD)
   -a, --af_field=AF_FIELD    INFO field containing the allele frequency (default: AF)
+  -i, --is_refAF             AF in the af_field is the REF AF
   -t, --refaf_limit=REFAF_LIMIT
                              Limits of REF AF. Comma-separated lower and upper limit (default: 0.1,0.9)
   -l, --het_ab_limit=HET_AB_LIMIT
                              Comma separated min and max allele balance accepted for het calls (default: 0.25,0.75)
   -q, --min_GQ=MIN_GQ        Min GQ for hom var to be included in charr computation (default: 20)
-  -d, --min_DP=MIN_DP        Min DP for var to be included in computation (default: 20)
+  -d, --dp_limit=DP_LIMIT    Limits of genotype DP. Comma-separated lower and upper limit (default: 20,100)
   -s, --samples=SAMPLES      Restrict analysis to the given samples. Comma separated list or file wiht one sample per line
   -r, --region=REGION        Specify genomic region for processing. Format is chr[:start-end]. Comma-separated list of regions or file with 1 region per line.
 ```
@@ -38,7 +39,7 @@ Options:
 ## How it works
 
 1. Multi-allelic variants and variants with REF AF outside the configured limits (`refaf_limit`) are skipped.
-2. Any genotype with DP less than `min_DP` is skipped.
+2. Any genotype with DP outside the configure DP limits `dp_limit` is skipped.
 3. Genotypes with GQ less than `min_GQ` are used only to compute inconsistent het rate, but discarded when computed het rate and CHARR.
 4. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom alt genotypes.
 
@@ -53,12 +54,12 @@ Options:
 | HQ_HET_RATE | Fraction of HQ het sites across all het sites with enough coverage |
 | CHARR | CHARR value computed as explained above using only HQ hom alt sites |
 | MEAN_REF_AB_HOM_ALT | Mean ref allele frequency observed in HQ hom alt sites |
-| HET_RATE | Heterozygoisty ratio (Nhet / Nhom) computed using only HQ genotypes |
+| HETEROZYGOSITY_RATE | Heterozygoisty ratio (Nhet / (Nhet + Nhom)) computed using only HQ genotypes |
 | INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threashold across all het sites with enough coverage (this includes all het sites with DP > threashold, disregarding GQ) |
 
 ## Running time
 
-Running time on the full 1000G cohort VCF containing 2504 samples and 
+Running time on the full 1000G cohort VCF containing 2504 samples and about 120M variants is ~22h. But similar results can be obtained scanning only chr22 in 
 
 ## Notes
 
