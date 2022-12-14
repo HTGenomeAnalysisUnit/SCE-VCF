@@ -14,7 +14,7 @@ import scevcf/arg_parse
 import scevcf/utils
 
 const VERSION = "0.1.1"
-const TSV_HEADER = "#SAMPLE\tHQ_HOM\tHQ_HOM_RATE\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHET_RATE\tINCONSISTENT_AB_HET_RATE"
+const TSV_HEADER = "#SAMPLE\tHQ_HOM\tHQ_HOM_RATE\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHETEROZYGOSITY_RATE\tINCONSISTENT_AB_HET_RATE"
 const AUTOSOMES = map(to_seq(1..22), proc(x: int): string = $x) 
 
 type Contamination_data = object
@@ -199,7 +199,7 @@ proc main* () =
     written_samples += 1
     let
       charr_value = (values.charr / values.hom.hq.float).formatFloat(ffDecimal, 5)
-      het_rate = (values.het.hq / values.hom.hq).formatFloat(ffDecimal, 5)
+      het_rate = (values.het.hq / (values.hom.hq + values.het.hq)).formatFloat(ffDecimal, 5)
       bad_het_rate = (values.het.bad / values.het.n).formatFloat(ffDecimal, 5)
       mean_ref_ab = (values.ref_ab / values.hom.hq.float).formatFloat(ffDecimal, 5)
       hom_hq_rate = (values.hom.hq / values.hom.n).formatFloat(ffDecimal, 5)
