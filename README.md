@@ -59,7 +59,7 @@ Options:
 
 ## Running time
 
-Running time on the full 1000G cohort VCF containing 2504 samples and about 120M variants is ~22h. But similar results can be obtained scanning only chr22 in 
+Running time on the full 1000G cohort VCF containing 2504 samples and about 120M variants is ~20h.
 
 ## Notes
 
