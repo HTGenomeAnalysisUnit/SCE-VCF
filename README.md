@@ -57,6 +57,24 @@ Options:
 | HETEROZYGOSITY_RATE | Heterozygoisty ratio (Nhet / (Nhet + Nhom)) computed using only HQ genotypes |
 | INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threashold across all het sites with enough coverage (this includes all het sites with DP > threashold, disregarding GQ) |
 
+## Interpretation of results
+
+If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to consider the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals and mark as possibly contaminated the outliers with values larger than mean + 3SD.
+
+Based on our test, a CHARR value of 0.02-0.03 can be considered a warning signal and a value larger than 0.03 is strongly suggestive of contamination. However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. Usually contaminated samples show also high value for HETEROZYGOSITY_RATE (>= 0.7) and/or INCONSISTENT_AB_HET_RATE (>= 0.05).
+
+## Suggested workflow
+
+If you are processing a cohort VCF that contains enough samples to reliably estimate the cohort allele frequency and this value is annoteated in the INFO column (usually AF), then you can use your file directly to estimate contamination in each sample.
+
+If you are working with a single sample VCF or a small cohort we suggest to proceed as follows:
+
+1. Select only PASS bi-allelic SNPs using `bcftools view -f PASS,. -m2 -M2 -v snps`
+2. Annotate the resulting file with AF from large reference population. For example, you can rapidly annotate global AF from gnomAD using echtvar (see [the official repo](https://github.com/brentp/echtvar))
+3. Perform contamination estimation
+
+**NB.** Decomposing the file with `bcftools norm` may lead to unexpected results due to variants derived from multi-allelic split being included in the computation. We suggest to instead select only biallelic sites before normalize (see point 1 above).
+
 ## Running time
 
 Running time on the full 1000G cohort VCF containing 2504 samples and about 120M variants is ~20h.
