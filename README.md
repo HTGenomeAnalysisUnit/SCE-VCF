@@ -61,7 +61,7 @@ Options:
 
 If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to consider the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals and mark as possibly contaminated the outliers with values larger than mean + 3SD.
 
-Based on our test, a CHARR value of 0.02-0.03 can be considered a warning signal and a value larger than 0.03 is strongly suggestive of contamination. However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. Usually contaminated samples show also high value for HETEROZYGOSITY_RATE (>= 0.7) and/or INCONSISTENT_AB_HET_RATE (>= 0.05).
+When evaluating a single sample, based on our test, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.05).
 
 ## Suggested workflow
 
