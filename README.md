@@ -43,6 +43,18 @@ Options:
 3. Genotypes with GQ less than `min_GQ` are used only to compute inconsistent het rate, but discarded when computed het rate and CHARR.
 4. CHARR is computed as `ADref / (AFref * ADtot)` considering only high-quality hom alt genotypes.
 
+## Suggested workflow
+
+If you are processing a cohort VCF that contains enough samples to reliably estimate the cohort allele frequency and this value is annoteated in the INFO column (usually AF), then you can use your file directly to estimate contamination in each sample.
+
+If you are working with a single sample VCF or a small cohort we suggest to proceed as follows:
+
+1. Select only PASS bi-allelic SNPs using `bcftools view -f PASS,. -m2 -M2 -v snps`
+2. Annotate the resulting file with AF from large reference population. For example, you can rapidly annotate global AF from gnomAD using echtvar (see [the official repo](https://github.com/brentp/echtvar))
+3. Perform contamination estimation
+
+**NB.** Decomposing the file with `bcftools norm` may lead to unexpected results due to variants derived from multi-allelic split being included in the computation. We suggest to instead select only biallelic sites before normalize (see point 1 above).
+
 ## Output columns
 
 | Column | Description |
@@ -61,19 +73,25 @@ Options:
 
 If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to consider the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals and mark as possibly contaminated the outliers with values larger than mean + 3SD.
 
-When evaluating a single sample, based on our test, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.05).
+When evaluating a single sample, based on the simulation results below, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.05).
 
-## Suggested workflow
+### Simulation results
 
-If you are processing a cohort VCF that contains enough samples to reliably estimate the cohort allele frequency and this value is annoteated in the INFO column (usually AF), then you can use your file directly to estimate contamination in each sample.
+To simulate contamination we generated mixed samples using 2 samples from the GIAB reference datasets. Briefly, we generated a 30X BAM file of NA24631 GIAB sample and then mixed this with various proportion of reads from NA24385. See results below and plots in the example folder.
 
-If you are working with a single sample VCF or a small cohort we suggest to proceed as follows:
-
-1. Select only PASS bi-allelic SNPs using `bcftools view -f PASS,. -m2 -M2 -v snps`
-2. Annotate the resulting file with AF from large reference population. For example, you can rapidly annotate global AF from gnomAD using echtvar (see [the official repo](https://github.com/brentp/echtvar))
-3. Perform contamination estimation
-
-**NB.** Decomposing the file with `bcftools norm` may lead to unexpected results due to variants derived from multi-allelic split being included in the computation. We suggest to instead select only biallelic sites before normalize (see point 1 above).
+|SAMPLE         |HQ_HOM |HQ_HOM_RATE|HQ_HET |HQ_HET_RATE|CHARR  |MEAN_REF_AB_HOM_ALT|HETEROZYGOSITY_RATE|INCONSISTENT_AB_HET_RATE|
+|---------------|-------|-----------|-------|-----------|-------|-------------------|-------------------|------------------------|
+|original_sample|1101063|1.00000    |1516921|0.96191    |0.01144|0.00371            |0.57942            |0.00999                 |
+|cont_0.99_0.01 |1092683|1.00000    |1515890|0.96113    |0.01669|0.00598            |0.58112            |0.01068                 |
+|cont_0.98_0.02 |1079498|1.00000    |1514989|0.95938    |0.02134|0.00794            |0.58393            |0.01249                 |
+|cont_0.97_0.03 |1062034|1.00000    |1514340|0.95648    |0.02543|0.00963            |0.58778            |0.01580                 |
+|cont_0.96_0.04 |1040781|1.00000    |1514274|0.95240    |0.02899|0.01107            |0.59266            |0.02079                 |
+|cont_0.95_0.05 |1027437|1.00000    |1512849|0.94977    |0.03044|0.01164            |0.59554            |0.02412                 |
+|cont_0.85_0.15 |741203 |1.00000    |1578589|0.86162    |0.04422|0.01578            |0.68049            |0.15782                 |
+|cont_0.9_0.1   |874280 |1.00000    |1532181|0.90654    |0.04179|0.01559            |0.63669            |0.08385                 |
+|cont_0.8_0.2   |635342 |1.00000    |1652251|0.82522    |0.04192|0.01431            |0.72227            |0.22597                 |
+|cont_0.7_0.3   |505642 |1.00000    |1832859|0.78729    |0.03092|0.00972            |0.78378            |0.29380                 |
+|cont_0.5_0.5   |409987 |1.00000    |2103835|0.78209    |0.01383|0.00371            |0.83691            |0.29484                 |
 
 ## Running time
 
