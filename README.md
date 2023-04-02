@@ -73,7 +73,14 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 
 If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to consider the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals and mark as possibly contaminated the outliers with values larger than mean + 3SD.
 
-When evaluating a single sample, based on the simulation results below, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.05).
+When evaluating a single sample, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.05).
+
+In the end we suggest the following thresholds for contamined samples:
+
+- WARNING: CHARR > 0.02 | INCONSISTENT_AB_HET_RATE > 0.1
+- FAIL: CHARR > 0.03 | INCONSISTENT_AB_HET_RATE > 0.15
+
+This approach classify samples similarly to traditional freemix approach, but it is more robust to contamination of different magnitude and it is more sensitive to subtle contamination.
 
 ### Simulation results
 
