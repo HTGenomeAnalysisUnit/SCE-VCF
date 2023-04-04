@@ -24,6 +24,19 @@ The simulation results are in simulation_results.tsv, and the plot_simulation_re
 
 ![Metrics plot](simulation_metric_plot.png)
 
+## Comparison with freemix
+
+We compared our computed metrics with the popular freemix tool on a set of 3474 WGS samples sequenced at 15-20X mean coverage. The results showed that combining the 3 computed metrics and especially CHARR and INCONSISTENT_AB_HET_RATE, we can detect contamination with high accuracy across the whole spectrum of contamination levels.
+
+In the following plot, we applied the warning and fail criteria described in the README to mark the samples and compared CHARR and FREEMIX values.
+
+![Metrics plot](Contamination_CHARR_FREEMIX_scatter.png)
+
+The upset plot shows that evaluating together CHARR and INCONSISTENT_AB_HET_RATE, we can detect contamination with high accuracy and results are consistent with the freemix tool.
+
+![Upset plot](Contamination_CHARR_FREEMIX_upset.png)
+
+
 ## Reference datasets
 
 We used 1000G cohort variant calling generated using GATK or DeepVariant from [Yun T. et al., 2021](https://academic.oup.com/bioinformatics/article/36/24/5582/6064144) to generate two reference datasets using our tool. The reference datasets are available in the example folder as 1000G_DeepVar.sce.tsv and 1000G_GATK.sce.tsv.
