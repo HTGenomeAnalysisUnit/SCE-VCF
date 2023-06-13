@@ -47,13 +47,13 @@ Options:
 
 If you are processing a cohort VCF that contains enough samples to reliably estimate the cohort allele frequency and this value is annoteated in the INFO column (usually AF), then you can use your file directly to estimate contamination in each sample.
 
+**NB.** Decomposing the file with `bcftools norm` may lead to unexpected results due to variants derived from multi-allelic split being included in the computation. We suggest to instead select only biallelic SNPs (for example `bcftools view -f PASS,. -m2 -M2 -v snps`) and then compute contamination metrics on this subset.
+
 If you are working with a single sample VCF or a small cohort we suggest to proceed as follows:
 
 1. Select only PASS bi-allelic SNPs using `bcftools view -f PASS,. -m2 -M2 -v snps`
 2. Annotate the resulting file with AF from large reference population. For example, you can rapidly annotate global AF from gnomAD using echtvar (see [the official repo](https://github.com/brentp/echtvar))
 3. Perform contamination estimation
-
-**NB.** Decomposing the file with `bcftools norm` may lead to unexpected results due to variants derived from multi-allelic split being included in the computation. We suggest to instead select only biallelic sites before normalize (see point 1 above).
 
 ## Output columns
 
@@ -71,7 +71,7 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 
 ## Interpretation of results
 
-If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to consider the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals and mark as possibly contaminated the outliers with values larger than mean + 3SD.
+If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to identify contaminated samples considering the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals. For example, one can mark as possibly contaminated the outliers with values larger than mean + 2 or 3 SD.
 
 When evaluating a single sample, a CHARR value of 0.02-0.03 may indicate a subtle contamination (1-5%) and a value larger than 0.03 is strongly suggestive of contamination (contamination > 5%). However, we suggest to jointly evaluate all the 3 metrics when determining contaminated sample. When a sample is heavily contaminated (> 20%), CHARR metric may look good, but you can observe high value for HETEROZYGOSITY_RATE (>= 0.7) and INCONSISTENT_AB_HET_RATE (>= 0.1).
 
@@ -110,6 +110,6 @@ Running time on the full 1000G cohort VCF containing 2504 samples and about 120M
 
 - **Multiple input VCFs:** The tool can read multiple VCFs and statistics are then aggregated by sample IDs if there are matching sample IDs across the input VCFs. In this way it's easy to analyze cohort VCFs splitted by chromosome for example.
 
-- **Subset samples:** User can specify a subset of samples to analyze in the cohort VCF, this can be conveniently used also to parallelize the analysis for large cohorts. Note that some time is required anyway to parse sample initially, so run time will increase as more samples are present in the input VCF
+- **Subset samples:** User can specify a subset of samples to analyze in the input VCF. Note that some time is required anyway to parse samples initially, so run time will increase as more samples are present in the input VCF
 
-- **Subset regions** Analysis can be limited to specific chromosome(s) or region(s) by using `--region` option. If you are analyzing VCF from WGS of a mid/large cohort a realiable estimation can be obtained also analyzing chr1 only for example.
+- **Subset regions** Analysis can be limited to specific chromosome(s) or region(s) by using `--region` option.

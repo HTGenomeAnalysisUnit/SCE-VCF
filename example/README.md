@@ -28,7 +28,7 @@ The simulation results are in simulation_results.tsv, and the plot_simulation_re
 
 We compared our computed metrics with the popular freemix tool on a set of 3474 WGS samples sequenced at 15-20X mean coverage. The results showed that combining the 3 computed metrics and especially CHARR and INCONSISTENT_AB_HET_RATE, we can detect contamination with high accuracy across the whole spectrum of contamination levels.
 
-In the following plot, we applied the warning and fail criteria described in the README to mark the samples and compared CHARR and FREEMIX values.
+In the following plot, we applied the warning (dashed line) and fail (solid line) criteria described in the README to mark the samples and compared CHARR and FREEMIX values.
 
 ![Metrics plot](Contamination_CHARR_FREEMIX_scatter.png)
 
