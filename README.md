@@ -102,7 +102,7 @@ To simulate contamination we generated mixed samples using 2 samples from the GI
 
 ## Running time
 
-Running time on the full 1000G cohort VCF containing 2504 samples and about 120M variants is ~20h.
+Running time on a single sample WGS VCF containing about 4M variants is ~25 secs. Analysis of the full 1000G cohort VCF containing 2504 samples and about 120M variants takes ~20h.
 
 ## Notes
 
