@@ -11,6 +11,32 @@ The ideal scenario is a cohort analysis so one can compare value distributions t
 
 Example distributions for contamination values based on 1000G 30X WGS samples and variants identified using either GATK or DeepVariant are provided in the example folder.
 
+## Installation
+
+On most Linux based systems, you can just download the pre-compiled executable from the latest release and it should work out of the box.
+
+### Compile from source
+
+Compiling the executable with nim has the following requirements:
+
+- nim >= 1.4.8
+- hts >= 0.3.21
+- argparse >= 3.0.0
+
+You can usually install them with `nimble install hts argparse`.
+
+Then you can clone the repository and compile the executable with `nim c -d:release src/sceVCF.nim`.
+
+### Generate a statically linked executable
+
+If you have singularity installed, you can generate a statically linked executable with the following command:
+
+```bash
+bash nim_compile.sh
+```
+
+See [here](See: https://github.com/brentp/hts-nim#static-builds) for more details on how this works. 
+
 ## Usage
 
 ```bash
