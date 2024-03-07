@@ -3,7 +3,7 @@ import strformat
 from ./utils import log
 
 var p = newParser("sceVCF"):
-    help("Select gene consequences from snpEff, VEP or bcftools annotations in VCF file")
+    help("Fast computation of contamination metrics from VCF file(s)")
     arg("vcf", nargs = -1, help="input VCF/BCF file(s). Glob pattern allowed")
     option("-o", "--out", help="Output file (TSV). If not provided output to stdout")
     option("-f", "--ad_field", help="FORMAT field containing the AD values", default = some("AD"))
