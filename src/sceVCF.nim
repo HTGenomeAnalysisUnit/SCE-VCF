@@ -166,7 +166,9 @@ proc main* () =
         continue
       
       doAssert v.format.get(opts.ad_field, ads) == Status.OK
-      doAssert v.format.get("GQ", gqs) == Status.OK
+      if v.format.get("GQ", gqs) != Status.OK:
+        # Put a sequence of 99 with length equal to the number of samples
+        gqs = repeat(99.int32, vcf.samples.len)
       doAssert v.format.get("DP", dps) == Status.OK 
       let genos = v.format.genotypes(gts)
 
