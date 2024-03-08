@@ -34,9 +34,9 @@ proc update_values(sdata: var Table[string, Contamination_data], genos: Genotype
   for i in 0..samples.high:
     if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
     let 
-      ref_ad = ads[i*2]
-      alt_ad = ads[i*2+1]
-      tot_ad = ref_ad + alt_ad
+      alt_ad = ads[i]
+      tot_ad = dps[i]
+      ref_ad = tot_ad - alt_ad
     var x = sdata.getOrDefault(samples[i])
 
     case genos[i].alts:
