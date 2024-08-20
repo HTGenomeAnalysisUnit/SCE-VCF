@@ -123,6 +123,8 @@ proc main* () =
     n_indels = 0
     n_large_af = 0
     n_no_aftag = 0
+    n_nopass = 0
+    n_noautosome = 0
 
   var
     ads: seq[int32]
@@ -152,15 +154,17 @@ proc main* () =
     for v in vcf.readvar(regions):
       n = n + 1
       var (dolog, log_msg) = progress_counter(n, interval, t0)
-      if dolog: log("INFO", log_msg)
-
-      echo fmt"Reading variant {$v}"
+      if dolog: log("INFO", log_msg)  
 
       #consider only PASS vars from autosomes
-      if v.FILTER != "PASS" and v.FILTER != ".": continue
+      if v.FILTER != "PASS" and v.FILTER != ".": 
+        n_nopass += 1
+        continue
       var chrom = $v.CHROM
-      if chrom.replace("chr","") notin AUTOSOMES: continue
-      
+      if chrom.replace("chr","") notin AUTOSOMES: 
+        n_noautosome += 1
+        continue
+
       #consider only biallelic sites
       if len(v.ALT) > 1: 
         n_multiallele += 1
@@ -197,8 +201,15 @@ proc main* () =
       echo "Executing update_values"
       sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
-    log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag + n_indels} vars ignored: {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
+    let tot_skipped = n_multiallele + n_large_af + n_no_aftag + n_indels + n_nopass + n_noautosome
+    log("INFO", fmt"{n} variants processed, {tot_skipped} vars ignored")
+    log("INFO", fmt"{n_nopass} no PASS variants, {n_noautosome} not in autosomes, {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
     close(vcf)
+
+    if tot_skipped == n:
+      log("FATAL", fmt"No variants remaining for analysis")
+      quit(QuitFailure)
+    
   
   log("INFO", "Computing contamination values")
   var written_samples = 0
