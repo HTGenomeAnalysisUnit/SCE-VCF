@@ -8,7 +8,6 @@ import sequtils
 import streams
 import tables
 import math
-#import sets
 from os import fileExists
 import scevcf/arg_parse
 import scevcf/utils
@@ -30,42 +29,39 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
     for r in regions:
       for variant in v.query(r): yield variant
 
-proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
+proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], refAF: float32, gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
   for i in 0..samples.high:
-    var x = sdata.getOrDefault(samples[i])
-    let 
+    let
+      sid = samples[i]
       ref_ad = ads[i*2]
       alt_ad = ads[i*2+1]
       tot_ad = ref_ad + alt_ad
 
     case genos[i].alts:
       of 2: #compute charr for hom alt vars
-        x.hom.n += 1
+        sdata[sid].hom.n += 1
         if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
-        x.hom.covered += 1
+        sdata[sid].hom.covered += 1
         if gqs[i] < minGQ: continue
         let 
-          ref_af = 1 - (if afs[0] < 0: 0.0 else: afs[0])
+          ref_af = (if refAF < 0: 0.0 else: refAF)
           ref_ab = ref_ad / tot_ad
           charr = ref_ab * (1/ref_af)
         if charr.classify != fcNan and charr.classify != fcInf:
-          #echo fmt"{$genos[i].alts} - TOT_AD: {tot_ad} - REF_AD: {ref_ad} - REF_AB: {ref_ab} - REF_AF: {ref_af} - CHARR: {charr}"
-          x.charr += charr
-        x.hom.hq += 1
+          sdata[sid].charr += charr
+        sdata[sid].hom.hq += 1
         if ref_ab.classify != fcNan and ref_ab.classify != fcInf:
-          x.ref_ab += ref_ab
+          sdata[sid].ref_ab += ref_ab
       of 1: #check 
-        x.het.n += 1
+        sdata[sid].het.n += 1
         if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
-        x.het.covered += 1
-        if gqs[i] >= minGQ: x.het.hq += 1
+        sdata[sid].het.covered += 1
+        if gqs[i] >= minGQ: sdata[sid].het.hq += 1
         let het_ab = alt_ad / tot_ad
         if het_ab < het_ab_limit[0] or het_ab > het_ab_limit[1]:
-          x.het.bad += 1
+          sdata[sid].het.bad += 1
       else:
         discard
-
-    sdata[samples[i]] = x 
     
 proc main* () =
   log("INFO", fmt"SCE-VCF v{VERSION}")
@@ -134,6 +130,10 @@ proc main* () =
     log("INFO", fmt"Processing file {f}")
     var vcf:VCF
     discard open(vcf, f, samples=samples)
+
+    for s in vcf.samples:
+      var x: Contamination_data
+      discard sample_data.hasKeyOrPut(s, x)
       
     var desc: string
     try:
@@ -182,17 +182,15 @@ proc main* () =
 
       #skip var where ref AF is too low or high
       #because this will results in outlier CHARR values
-      var refAF: float
+      var refAF = 1-afs[0]
       if (opts.is_refAF):
         refAF = afs[0]
-      else:
-        refAF = 1-afs[0]
         
       if refAF < refAF_lims[0] or refAF > refAF_lims[1]: 
         n_large_af += 1
         continue 
       
-      sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
+      sample_data.update_values(genos, ads, refAF, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
     let tot_skipped = n_multiallele + n_large_af + n_no_aftag + n_indels + n_nopass + n_noautosome
     log("INFO", fmt"{n} variants processed, {tot_skipped} vars ignored")
@@ -209,8 +207,9 @@ proc main* () =
     else:
       stdout.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
       stdout.writeLine(TSV_HEADER)
-    
   
+  let testv = sample_data["HG00096"].hom
+  echo fmt"HG00096: {testv}"
   log("INFO", "Computing contamination values")
   var 
     written_samples = 0
