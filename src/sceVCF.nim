@@ -14,14 +14,14 @@ import scevcf/arg_parse
 import scevcf/utils
 
 const VERSION = "0.1.2 - DEBUG"
-const TSV_HEADER = "#SAMPLE\tHQ_HOM\tHQ_HOM_RATE\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHETEROZYGOSITY_RATE\tINCONSISTENT_AB_HET_RATE"
+const TSV_HEADER = "#SAMPLE\tHOM_TOTAL\tHOM_COVERED\tHQ_HOM\tHQ_HOM_RATE\tHET_TOTAL\tHET_COVERED\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHETEROZYGOSITY_RATE\tINCONSISTENT_AB_HET_RATE"
 const AUTOSOMES = map(to_seq(1..22), proc(x: int): string = $x) 
 
 type Contamination_data = object
   charr: float
   ref_ab: float
-  het: tuple[n: int, hq: int, bad: int]
-  hom: tuple[n: int, hq: int]
+  het: tuple[n: int, covered: int, hq: int, bad: int]
+  hom: tuple[n: int, covered: int, hq: int]
 
 iterator readvar(v: VCF, regions: seq[string]): Variant =
   if regions.len == 0:
@@ -31,20 +31,18 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
       for variant in v.query(r): yield variant
 
 proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
-  echo fmt"Samples array length passed to updated_values: {samples.len}"
   for i in 0..samples.high:
-    echo fmt"Reading sample {samples[i]}"
-    if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
+    var x = sdata.getOrDefault(samples[i])
     let 
       ref_ad = ads[i*2]
       alt_ad = ads[i*2+1]
       tot_ad = ref_ad + alt_ad
-    echo "Initialize Contamination object"
-    var x = sdata.getOrDefault(samples[i])
 
     case genos[i].alts:
       of 2: #compute charr for hom alt vars
         x.hom.n += 1
+        if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
+        x.hom.covered += 1
         if gqs[i] < minGQ: continue
         let 
           ref_af = 1 - (if afs[0] < 0: 0.0 else: afs[0])
@@ -58,6 +56,8 @@ proc update_values(sdata: var Table[string, Contamination_data], genos: Genotype
           x.ref_ab += ref_ab
       of 1: #check 
         x.het.n += 1
+        if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
+        x.het.covered += 1
         if gqs[i] >= minGQ: x.het.hq += 1
         let het_ab = alt_ad / tot_ad
         if het_ab < het_ab_limit[0] or het_ab > het_ab_limit[1]:
@@ -212,18 +212,24 @@ proc main* () =
     
   
   log("INFO", "Computing contamination values")
-  var written_samples = 0
+  var 
+    written_samples = 0
+    warn_no_hq_hom = 0
+    warn_no_hq_het = 0
   for sample_id, values in sample_data.pairs:
     written_samples += 1
     let
       charr_value = (values.charr / values.hom.hq.float).formatFloat(ffDecimal, 5)
       het_rate = (values.het.hq / (values.hom.hq + values.het.hq)).formatFloat(ffDecimal, 5)
-      bad_het_rate = (values.het.bad / values.het.n).formatFloat(ffDecimal, 5)
+      bad_het_rate = (values.het.bad / values.het.covered).formatFloat(ffDecimal, 5)
       mean_ref_ab = (values.ref_ab / values.hom.hq.float).formatFloat(ffDecimal, 5)
-      hom_hq_rate = (values.hom.hq / values.hom.n).formatFloat(ffDecimal, 5)
-      het_hq_rate = (values.het.hq / values.het.n).formatFloat(ffDecimal, 5)
+      hom_hq_rate = (values.hom.hq / values.hom.covered).formatFloat(ffDecimal, 5)
+      het_hq_rate = (values.het.hq / values.het.covered).formatFloat(ffDecimal, 5)
 
-    let result_line = &"{sample_id}\t{values.hom.hq}\t{hom_hq_rate}\t{values.het.hq}\t{het_hq_rate}\t{charr_value}\t{mean_ref_ab}\t{het_rate}\t{bad_het_rate}"
+    let result_line = &"{sample_id}\t{values.hom.n}\t{values.hom.covered}\t{values.hom.hq}\t{hom_hq_rate}\t{values.het.n}\t{values.het.covered}\t{values.het.hq}\t{het_hq_rate}\t{charr_value}\t{mean_ref_ab}\t{het_rate}\t{bad_het_rate}"
+    if values.hom.hq == 0: warn_no_hq_hom += 1
+    if values.het.hq == 0: warn_no_hq_het += 1
+
     if write_to_file:
       out_tsv.writeLine(result_line)
     else:
@@ -231,6 +237,12 @@ proc main* () =
 
   if write_to_file: close(out_tsv)
   log("INFO", fmt"Computed contamination values for {written_samples} sample(s) in {elapsed_time(start_time)}")
+
+  if warn_no_hq_hom > 0:
+    log("WARN", fmt"{warn_no_hq_hom} sample(s) have not HQ homozygous ALT sites, CHARR value will not be computed for those. These have HQ_HOM == 0")
+  
+  if warn_no_hq_het > 0:
+    log("WARN", fmt"{warn_no_hq_het} sample(s) have not HQ heterozygous sites, het rate computation will be unreliable for those. These have HQ_HET == 0")
 
 when isMainModule:
   main()

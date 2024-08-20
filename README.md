@@ -86,14 +86,18 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 | Column | Description |
 |--------|-------------|
 | SAMPLE | Sample ID as read from input VCF file |
-| HQ_HOM | Number of high quality homozygous sites used in CHARR computation |
-| HQ_HOM_RATE | Fraction of HQ hom sites across all hom sites with enough coverage |
+| HOM_TOTAL | Total number of ALT homozygous sites observed for this sample before DP/GQ filters |
+| HOM_COVERED | Number of ALT homozygous sites within the configured DP limits |
+| HQ_HOM | Number of high quality ALT homozygous sites used in CHARR computation |
+| HQ_HOM_RATE | Fraction of HQ hom sites across all hom sites with enough coverage (HQ_HOM / HOM_COVERED) |
+| HET_TOTAL | Total number of heterozygous sites observed for this sample before DP/GQ filters |
+| HET_COVERED | Number of heterozygous sites within the configured DP limits |
 | HQ_HET | Number of high quality heterozygous sites used to compute het rate |
-| HQ_HET_RATE | Fraction of HQ het sites across all het sites with enough coverage |
+| HQ_HET_RATE | Fraction of HQ het sites across all het sites with enough coverage (HQ_HET / HET_COVERED) |
 | CHARR | CHARR value computed as explained above using only HQ hom alt sites |
 | MEAN_REF_AB_HOM_ALT | Mean ref allele frequency observed in HQ hom alt sites |
 | HETEROZYGOSITY_RATE | Heterozygoisty ratio (Nhet / (Nhet + Nhom)) computed using only HQ genotypes |
-| INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threashold across all het sites with enough coverage (this includes all het sites with DP > threashold, disregarding GQ) |
+| INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threshold across all het sites with enough coverage (this includes all het sites with DP within threshold, disregarding GQ) |
 
 ## Interpretation of results
 
