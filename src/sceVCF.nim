@@ -32,12 +32,13 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
 
 proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
   for i in 0..samples.high:
+    echo fmt"Reading sample {samples[i]}"
     if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
     let 
       ref_ad = ads[i*2]
       alt_ad = ads[i*2+1]
       tot_ad = ref_ad + alt_ad
-    echo fmt"Reading sample {samples[i]}"
+    echo "Initialize Contamination object"
     var x = sdata.getOrDefault(samples[i])
 
     case genos[i].alts:
