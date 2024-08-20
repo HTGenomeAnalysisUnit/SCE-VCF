@@ -31,6 +31,7 @@ iterator readvar(v: VCF, regions: seq[string]): Variant =
       for variant in v.query(r): yield variant
 
 proc update_values(sdata: var Table[string, Contamination_data], genos: Genotypes, ads: seq[int32], afs: seq[float32], gqs: seq[int32], dps: seq[int32], samples: seq[string], het_ab_limit: (float,float), minGQ: int, dp_limit: seq[int]) =
+  echo fmt"Samples array length passed to updated_values: {samples.len}"
   for i in 0..samples.high:
     echo fmt"Reading sample {samples[i]}"
     if dps[i] < dp_limit[0] or dps[i] > dp_limit[1]: continue
@@ -191,6 +192,7 @@ proc main* () =
         n_large_af += 1
         continue 
       
+      echo "Executing update_values"
       sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
     log("INFO", fmt"{n} variants processed, {n_multiallele + n_large_af + n_no_aftag + n_indels} vars ignored: {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
