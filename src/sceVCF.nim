@@ -37,6 +37,7 @@ proc update_values(sdata: var Table[string, Contamination_data], genos: Genotype
       ref_ad = ads[i*2]
       alt_ad = ads[i*2+1]
       tot_ad = ref_ad + alt_ad
+    echo fmt"Reading sample {samples[i]}"
     var x = sdata.getOrDefault(samples[i])
 
     case genos[i].alts:
@@ -145,6 +146,7 @@ proc main* () =
     except:
       log("FATAL", fmt"Didn't find {opts.ad_field} FORMAT in header in {vcf.fname}")
 
+    echo "number of samples in VCF: " & $vcf.samples.len
     for v in vcf.readvar(regions):
       n = n + 1
       var (dolog, log_msg) = progress_counter(n, interval, t0)
