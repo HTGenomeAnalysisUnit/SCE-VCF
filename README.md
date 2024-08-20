@@ -99,6 +99,8 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 | HETEROZYGOSITY_RATE | Heterozygoisty ratio (Nhet / (Nhet + Nhom)) computed using only HQ genotypes |
 | INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threshold across all het sites with enough coverage (this includes all het sites with DP within threshold, disregarding GQ) |
 
+**NB.** All values in result table are based only on variant passing the global variants filter (PASS, biallelic, SNV only, REF AF within the configured threshold). The number of variants considered for the analysis is stated in the header.
+
 ## Interpretation of results
 
 If you have analyzed a large enough cohort or you have a cohort processed with a similar pipeline for variant-calling, we suggest to identify contaminated samples considering the distribution of CHARR, HETEROZYGOSITY_RATE, and INCONSISTENT_AB_HET_RATE values across all individuals. For example, one can mark as possibly contaminated the outliers with values larger than mean + 2 or 3 SD.

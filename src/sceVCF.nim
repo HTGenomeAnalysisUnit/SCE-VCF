@@ -101,10 +101,6 @@ proc main* () =
     if isNil(out_tsv):
         log("FATAL", "Could not open output file " & opts.out)
         quit "", QuitFailure
-    else:
-        out_tsv.writeLine(TSV_HEADER)
-  else:
-    stdout.writeLine(TSV_HEADER)
 
   for f in opts.vcf:
     if not fileExists(f):
@@ -198,7 +194,6 @@ proc main* () =
         n_large_af += 1
         continue 
       
-      echo "Executing update_values"
       sample_data.update_values(genos, ads, afs, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
     let tot_skipped = n_multiallele + n_large_af + n_no_aftag + n_indels + n_nopass + n_noautosome
@@ -209,6 +204,13 @@ proc main* () =
     if tot_skipped == n:
       log("FATAL", fmt"No variants remaining for analysis")
       quit(QuitFailure)
+
+    if write_to_file:
+      out_tsv.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
+      out_tsv.writeLine(TSV_HEADER)
+    else:
+      stdout.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
+      stdout.writeLine(TSV_HEADER)
     
   
   log("INFO", "Computing contamination values")
@@ -236,13 +238,13 @@ proc main* () =
       stdout.writeLine(result_line)
 
   if write_to_file: close(out_tsv)
-  log("INFO", fmt"Computed contamination values for {written_samples} sample(s) in {elapsed_time(start_time)}")
+  log("INFO", fmt"Written contamination values for {written_samples} sample(s) in {elapsed_time(start_time)}")
 
   if warn_no_hq_hom > 0:
-    log("WARN", fmt"{warn_no_hq_hom} sample(s) have not HQ homozygous ALT sites, CHARR value will not be computed for those. These have HQ_HOM == 0")
+    log("WARN", fmt"{warn_no_hq_hom} sample(s) have no HQ homozygous ALT sites, CHARR value will not be computed for those. These have HQ_HOM == 0")
   
   if warn_no_hq_het > 0:
-    log("WARN", fmt"{warn_no_hq_het} sample(s) have not HQ heterozygous sites, het rate computation will be unreliable for those. These have HQ_HET == 0")
+    log("WARN", fmt"{warn_no_hq_het} sample(s) have no HQ heterozygous sites, het rate computation will be unreliable for those. These have HQ_HET == 0")
 
 when isMainModule:
   main()
