@@ -146,7 +146,6 @@ proc main* () =
     except:
       log("FATAL", fmt"Didn't find {opts.ad_field} FORMAT in header in {vcf.fname}")
 
-    echo "number of samples in VCF: " & $vcf.samples.len
     for v in vcf.readvar(regions):
       n = n + 1
       var (dolog, log_msg) = progress_counter(n, interval, t0)
@@ -189,7 +188,6 @@ proc main* () =
       else:
         refAF = 1-afs[0]
         
-      #echo fmt"{$v} - AF: {afs[0]} - refAF {refAF} - AF lims low: {refAF_lims[0]} - AF lims high: {refAF_lims[1]}"
       if refAF < refAF_lims[0] or refAF > refAF_lims[1]: 
         n_large_af += 1
         continue 
