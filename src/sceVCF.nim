@@ -12,7 +12,7 @@ from os import fileExists
 import scevcf/arg_parse
 import scevcf/utils
 
-const VERSION = "0.1.2 - DEBUG"
+const VERSION = "0.1.3 - RC1"
 const TSV_HEADER = "#SAMPLE\tHOM_TOTAL\tHOM_COVERED\tHQ_HOM\tHQ_HOM_RATE\tHET_TOTAL\tHET_COVERED\tHQ_HET\tHQ_HET_RATE\tCHARR\tMEAN_REF_AB_HOM_ALT\tHETEROZYGOSITY_RATE\tINCONSISTENT_AB_HET_RATE"
 const AUTOSOMES = map(to_seq(1..22), proc(x: int): string = $x) 
 
