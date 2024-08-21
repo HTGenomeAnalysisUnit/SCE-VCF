@@ -192,24 +192,24 @@ proc main* () =
       
       sample_data.update_values(genos, ads, refAF, gqs, dps, vcf.samples, het_ab_limit, minGQ, dp_lims)
     
-    let tot_skipped = n_multiallele + n_large_af + n_no_aftag + n_indels + n_nopass + n_noautosome
-    log("INFO", fmt"{n} variants processed, {tot_skipped} vars ignored")
-    log("INFO", fmt"{n_nopass} no PASS variants, {n_noautosome} not in autosomes, {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
     close(vcf)
 
-    if tot_skipped == n:
-      log("FATAL", fmt"No variants remaining for analysis")
-      quit(QuitFailure)
-
-    if write_to_file:
-      out_tsv.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
-      out_tsv.writeLine(TSV_HEADER)
-    else:
-      stdout.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
-      stdout.writeLine(TSV_HEADER)
+  let tot_skipped = n_multiallele + n_large_af + n_no_aftag + n_indels + n_nopass + n_noautosome
+  log("INFO", fmt"{n} variants processed, {tot_skipped} vars ignored")
+  log("INFO", fmt"{n_nopass} no PASS variants, {n_noautosome} not in autosomes, {n_multiallele} multiallelic, {n_indels} indels, {n_large_af} outside ref AF limits, {n_no_aftag} missing AF tag")
   
-  let testv = sample_data["HG00096"].hom
-  echo fmt"HG00096: {testv}"
+  if tot_skipped == n:
+    log("FATAL", fmt"No variants remaining for analysis")
+    quit(QuitFailure)
+
+  # Write header to output
+  if write_to_file:
+    out_tsv.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
+    out_tsv.writeLine(TSV_HEADER)
+  else:
+    stdout.writeLine(fmt"## {n - tot_skipped} variants considered for analysis, {tot_skipped}/{n} vars ignored")
+    stdout.writeLine(TSV_HEADER)
+  
   log("INFO", "Computing contamination values")
   var 
     written_samples = 0
