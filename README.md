@@ -81,7 +81,9 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 2. Annotate the resulting file with AF from large reference population. For example, you can rapidly annotate global AF from gnomAD using echtvar (see [the official repo](https://github.com/brentp/echtvar))
 3. Perform contamination estimation
 
-## Output columns
+## Output interpretation
+
+### Output table
 
 | Column | Description |
 |--------|-------------|
@@ -99,7 +101,11 @@ If you are working with a single sample VCF or a small cohort we suggest to proc
 | HETEROZYGOSITY_RATE | Heterozygoisty ratio (Nhet / (Nhet + Nhom)) computed using only HQ genotypes |
 | INCONSISTENT_AB_HET_RATE | Fraction of het sites with AB outside threshold across all het sites with enough coverage (this includes all het sites with DP within threshold, disregarding GQ) |
 
-**NB.** All values in result table are based only on variant passing the global variants filter (PASS, biallelic, SNV only, REF AF within the configured threshold). The number of variants considered for the analysis is stated in the header.
+**NB.** All values reported in the output table are based only on variant passing the global variants filter (PASS, biallelic, SNV only, REF AF within the configured threshold). The number of variants considered for the analysis is reported in the header section.
+
+### Samples with no HQ sites
+
+A warning is given when no HQ homozygous / heterzygous sites are detected since this affects the computation of CHARR value and HETEROZYGOSY_RATE. Samples having zero count for HQ_HOM will not have a CHARR value, and samples with zero count for HQ_HET will have uninformative HETEROZYGOSITY_RATE.
 
 ## Interpretation of results
 
