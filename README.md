@@ -15,6 +15,20 @@ Example distributions for contamination values based on 1000G 30X WGS samples an
 
 On most Linux based systems, you can just download the pre-compiled executable from the latest release and it should work out of the box.
 
+### Test
+
+You can test correct execution by running 
+
+```bash
+./sceVCF -o test/full_test.tsv test/input_test.vcf.gz
+./sceVCF -o test/samples_test.tsv -s test/samples.list test/input_test.vcf.gz
+```
+
+This will generate:
+
+- `test/full_test.tsv` containing results for 10 samples
+- `test/samples_test.tsv` containing results for 3 samples
+
 ### Compile from source
 
 Compiling the executable with nim has the following requirements:

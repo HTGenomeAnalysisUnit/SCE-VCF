@@ -1,4 +1,4 @@
-test/
+test/large_tests
 bin/
 paper/
 localcompile.sh
