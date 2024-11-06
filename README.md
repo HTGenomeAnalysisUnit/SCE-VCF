@@ -165,3 +165,10 @@ Running time on a single sample WGS VCF containing about 4M variants is ~25 secs
 - **Subset samples:** User can specify a subset of samples to analyze in the input VCF. Note that some time is required anyway to parse samples initially, so run time will increase as more samples are present in the input VCF
 
 - **Subset regions** Analysis can be limited to specific chromosome(s) or region(s) by using `--region` option.
+
+## Citation
+
+If you find this tool useful and use include the CHARR metric in your work, please cite the corresponding paper.
+
+> CHARR efficiently estimates contamination from DNA sequencing data. Lu, Wenhan et al.
+  The American Journal of Human Genetics, Volume 110, Issue 12, 2068 - 2076
