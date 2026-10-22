@@ -15,7 +15,7 @@ COPY src/ ./src/
 
 RUN nimble install -y --depsOnly \
     && nimble build -y -d:release --opt:size --passL:-s \
-    && install -Dm755 sceVCF /out/sceVCF
+    && install -Dm755 bin/sceVCF /out/sceVCF
 
 FROM debian:bookworm-slim AS runtime
 
