@@ -1,0 +1,7 @@
+# Only send the files needed to compile and package QRS.
+**
+!Dockerfile
+!sceVCF.nimble
+!src/
+!src/**
+!LICENSE
