@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.2"
+version       = "0.1.4"
 author        = "edoardo.giacopuzzi"
 description   = "Fast calculation of metric useful to estimate sample contamination"
 license       = "MIT"
