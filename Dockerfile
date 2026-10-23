@@ -19,11 +19,14 @@ RUN nimble install -y --depsOnly \
 
 FROM debian:bookworm-slim AS runtime
 
+# Bash runs Nextflow task scripts; procps provides ps for task metrics.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        bash \
         ca-certificates \
         libhts3 \
         libpcre3 \
+        procps \
     && rm -rf /var/lib/apt/lists/* \
     # hts-nim loads libhts.so, which is normally supplied by libhts-dev.
     && ln -s "$(ldconfig -p | awk '$1 == "libhts.so.3" { print $NF; exit }')" /usr/local/lib/libhts.so \
@@ -32,9 +35,10 @@ RUN apt-get update \
 COPY --from=builder /out/sceVCF /usr/local/bin/sceVCF
 COPY LICENSE /usr/share/doc/sceVCF/LICENSE
 
-# Check the tool runs in the final image
-RUN sceVCF --help
+# Check the tool and Nextflow task runtime in the final image.
+RUN sceVCF --help \
+    && /bin/bash -uec 'command -v awk date grep ps sed tail tee >/dev/null; ps -eo pid,ppid,pcpu,pmem,rss,vsz,stat,comm >/dev/null'
 
 WORKDIR /data
-ENTRYPOINT ["/usr/local/bin/sceVCF"]
-CMD ["--help"]
+# Let Nextflow launch its task shell without an application entrypoint.
+CMD ["/usr/local/bin/sceVCF", "--help"]
