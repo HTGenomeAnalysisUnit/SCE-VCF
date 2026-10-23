@@ -11,4 +11,4 @@ singularity exec \
 docker://brentp/musl-hts-nim:latest \
 /usr/local/bin/nsb \
 -s $PWD/src/${pkg_name}.nim \
---nimble-file $PWD/${pkg_name}.nimble -- -d:danger -d:release
+--nimble-file $PWD/${pkg_name}.nimble -- -d:release

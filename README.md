@@ -29,6 +29,12 @@ This will generate:
 - `test/full_test.tsv` containing results for 10 samples
 - `test/samples_test.tsv` containing results for 3 samples
 
+To check autosome filtering, including consecutive non-autosomal contigs, run:
+
+```bash
+python3 test/test_contig_filter.py ./sceVCF
+```
+
 ### Compile from source
 
 Compiling the executable with nim has the following requirements:
@@ -50,6 +56,8 @@ bash nim_compile.sh
 ```
 
 See [here](See: https://github.com/brentp/hts-nim#static-builds) for more details on how this works. 
+
+Static builds use `-d:release` with assertions and runtime checks enabled.
 
 ## Usage
 

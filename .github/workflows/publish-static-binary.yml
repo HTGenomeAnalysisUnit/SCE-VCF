@@ -27,7 +27,7 @@ jobs:
             --entrypoint /usr/local/bin/nsb \
             brentp/musl-hts-nim:latest \
             --nimble-file /load/sceVCF.nimble \
-            -s /load/src/sceVCF.nim -- -d:danger -d:release
+            -s /load/src/sceVCF.nim -- -d:release
 
       - name: Verify and package the binary
         run: |
@@ -41,6 +41,7 @@ jobs:
             exit 1
           fi
           ./sceVCF --help
+          python3 test/test_contig_filter.py ./sceVCF
           mkdir -p dist
           # Copy the container-owned binary into an executable release asset.
           install -m755 sceVCF dist/sceVCF-linux-amd64
